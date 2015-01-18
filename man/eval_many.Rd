@@ -4,7 +4,8 @@
 \alias{eval_many}
 \title{Repeated evaluations along one dimension}
 \usage{
-eval_many(fun, ..., method = "OFAC", default.args = list())
+eval_many(fun, ..., method = "ofac", default.args = list(),
+  collate = TRUE, reshape.fun = identity, id.name)
 }
 \arguments{
 \item{fun}{The function to be evaluated.}
@@ -13,34 +14,60 @@ eval_many(fun, ..., method = "OFAC", default.args = list())
 argument in \code{...} is a vector or list of values.}
 
 \item{method}{The sensitivity analysis method to be used. Currently supports
-one-factor-at-a-time ("OFAC") evaluation.}
+one-factor-at-a-time ("ofac") evaluation and evaluation of parameter sets
+("set").}
 
-\item{default.args}{the default values of arguments passed to \code{fun}.}
+\item{default.args}{the default values of arguments passed to \code{fun}.
+for \code{method = "ofac"}, must include a default value for each argument
+in \code{...}.}
+
+\item{collate}{Whether to collate the results or not. If TRUE, output
+elements will be coerced into data.frames using \code{as.data.frame}.}
+
+\item{reshape.fun}{A function for reshaping the output of each evaluation
+prior to coercing and collating the outputs.}
+
+\item{id.name}{The name of the column used to store the evaluation
+  identifiers. Defaults to the value of \code{method}.}
 }
 \value{
-A list of lists: The top-level names are the arguments in \code{...}
-  and the bottom-level names are the names of each element in each argument
-  in \code{...}.
+If \code{collate = TRUE}, a data.frame. Otherwise, a list structure
+  depending on the value of \code{method}:
+  \item{"ofac"}{A list of lists: The top-level names are
+    the arguments in \code{...} and the bottom-level names are the names of
+    each element of that argument. If the elements of an argument in
+    \code{...} are not named, the values of the elements will used via
+    \code{paste}.}
+  \item{"set"}{A simple list.}
 }
 \description{
 Evaluate a function repeatedly, varying one argument at a time.
 }
-\details{
-If the elements of an argument in \code{...} are not named, the
-  values of the elements will used via \code{paste}.
-}
 \examples{
-eval_many(rnorm, mean=c(5,10), sd=c(2, 3), default.args=list(n=5))
-eval_many(rnorm, mean=c(5,10), sd=c(2, 3), default.args=list(n=5, mean=20, sd=5))
+eval_many(rnorm, mean = c(5, 9), sd = c(2, 3), default.args = list(n = 5))
+eval_many(rnorm, mean = c(5, 9), sd = c(2, 3), reshape.fun = t,
+  default.args = list(n = 5, mean = 0, sd = 5))
+# vector recyclying
+eval_many(rnorm, mean = c(0, 5, 3), sd = c(0, 1), method = "set",
+  default.args = list(n = 5), reshape.fun = t, id.name = "set")
 
-\dontrun{
+\donttest{\dontrun{
 formulas = list(y ~ x, y ~ x^2, y ~ x + z)
 datasets = list(
   A = data.frame(x=1:10, y = 1:10 + rlnorm(10)),
-  B = data.frame(x=1:10, y = 1:10 + rnorm(10, mean=2))
+  B = data.frame(x=1:10, y = 1:10 + rnorm(10, mean = 2))
 )
-eval_many(lm, data=datasets, default.args=list(formula = formulas[[1]]))
-eval_many(lm, formula=formulas, default.args=list(datasets$B))
-}
+
+# raw output
+eval_many(lm, formula = formulas, data = datasets[1], method = "set",
+  collate = FALSE)
+
+# data extraction
+eval_many(lm, formula = formulas, data = datasets[1], method = "set",
+  reshape.fun = function(x) t(x$coefficients))
+eval_many(lm, formula = formulas, data = datasets, method = "ofac",
+  default.args = list(formula = formulas[[1]], data = datasets[[1]]),
+  reshape.fun = function(x) t(x$coefficients))
+}}
 }
 
