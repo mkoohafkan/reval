@@ -4,6 +4,7 @@
 ```{r include=FALSE}
 require(knitr)
 require(reval)
+opts_chunk$set(tidy=TRUE, message=FALSE)
 ```
 
 Quickstart for reval
@@ -30,7 +31,7 @@ management purposes.
 
 Computing a single profile would look something like this: 
 
-```{r single}
+```{r single, results="hide"}
 require(rivr)
 compute_profile(So = 0.001, n = 0.045, Q = 250, y0 = 2.7, Cm = 1.486, g = 32.2, 
   B = 100, SS = 0, stepdist = 50, totaldist = 3000)
@@ -53,8 +54,8 @@ combined = do.call(rbind.data.frame, results)
 
 That wasn't too bad. But what if we needed to investigate other parameters in 
 as well as the roughness coefficient? For each additional variable we would
-need an additional for loop, and this would incur a large amount of 
-boiler-plate code. `reval` takes care of that stuff for you. We replace the
+need an additional for loops, impacting readability and making code maintenance
+more of a hassle. `reval` takes care of that stuff for you. We replace the
 above loop with a single call to `eval_many`:
 
 ```{r reval-single}
@@ -74,11 +75,22 @@ results = eval_many(compute_profile, n = seq(0.03, 0.06, by = 0.005),
 
 `reval` adds identifiers automatically, which makes plotting easy.
 
-```{r plot-curves}
+```{r plot-curves, fig.width=10, dpi=200}
 require(ggplot2)
 ggplot(results, aes(x=x, y=y, color=factor(n))) + geom_line() + 
   facet_wrap(~So)
 ```
 
-Still confused? Check out the `eval_many` function documentation for more 
+The identifiers can also be used for data subsetting and extraction, e.g. using 
+`dplyr`.
+
+```{r reval-extract, results="hide"}
+require(dplyr)
+filter(results, n == 0.045, So == 0.0015)
+``` 
+
+Still confused? 
+---------------
+
+Check out the `eval_many` function documentation for more 
 examples.
