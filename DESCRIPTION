@@ -6,7 +6,9 @@ Author: Michael Koohafkan
 Maintainer: Michael Koohafkan <michael.koohafkan@gmail.com>
 Description: reval is designed to simplify scenario testing and sensitivity 
     analysis with R. A generalized function for one-factor-at-a-time (OFAT) 
-    sensitivity analysis and evaluation of parameter sets is provided. Options
-    for formatting output are also provided.
+    sensitivity analysis, evaluation of parameter sets and (sampled) parameter 
+    permutations is provided. Options for formatting output are also provided.
 Depends: R (>= 3.1.0)
+Suggests: knitr (>= 1.6), ggplot2, rivr
 License: GPL (>= 3.0)
+VignetteBuilder: knitr

@@ -1,0 +1,84 @@
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{quickstart}
+
+```{r include=FALSE}
+require(knitr)
+require(reval)
+```
+
+Quickstart for reval
+====================
+
+Introduction
+------------
+This vignette will get you stated using `reval` by showing a moderately-complex 
+example. Additional examples are available in the function documentation for
+`eval_many`.
+
+Example: Computation of backwater curves
+----------------------------------------
+
+In-stream structures such as dams, weirs and culverts modify flows in a river. 
+In large rivers with tranquil flows, such structures can affect river flow 
+miles upstream. These water surface profiles or "backwater curves" can be 
+modelled using well-understood hydraulic models. One important 
+parameter---a coefficient representing the material or "roughness" of the river 
+bed---is empirical and cannot be easily measured. Therefore it is often 
+important for engineers to compute these backwater curves for a range of 
+roughness values in order to establish confidence limits for planning and 
+management purposes. 
+
+Computing a single profile would look something like this: 
+
+```{r single}
+require(rivr)
+compute_profile(So = 0.001, n = 0.045, Q = 250, y0 = 2.7, Cm = 1.486, g = 32.2, 
+  B = 100, SS = 0, stepdist = 50, totaldist = 3000)
+```
+
+If we wanted to loop through a series of roughness values (the argument `n`) 
+and compile the results for comparison, we would need a loop:
+
+```{r loop}
+ns = seq(0.03, 0.06, by = 0.005)
+results = vector("list", length=length(ns))
+for(i in 1:length(ns)){
+  results[[i]] = compute_profile(So = 0.001, n = ns[i], Q = 250, y0 = 2.7, 
+    Cm = 1.486, g = 32.2, B = 100, SS = 0, stepdist = 50, totaldist = 3000)
+  # add an identifier to the result
+  results[[i]]["n"] = ns[i]
+}
+combined = do.call(rbind.data.frame, results)
+```
+
+That wasn't too bad. But what if we needed to investigate other parameters in 
+as well as the roughness coefficient? For each additional variable we would
+need an additional for loop, and this would incur a large amount of 
+boiler-plate code. `reval` takes care of that stuff for you. We replace the
+above loop with a single call to `eval_many`:
+
+```{r reval-single}
+results = eval_many(compute_profile, n = seq(0.03, 0.06, by = 0.005),
+  default.args = list(So = 0.001, Q = 250, y0 = 2.7, 
+  Cm = 1.486, g = 32.2, B = 100, SS = 0, stepdist = 50, totaldist = 3000))
+```
+
+Extending the analysis to multiple variables is trivial with `reval`:
+
+```{r reval-multi}
+results = eval_many(compute_profile, n = seq(0.03, 0.06, by = 0.005),
+  So = c(0.001, 0.0015), default.args = list(Q = 250, 
+  y0 = 2.7, Cm = 1.486, g = 32.2, B = 100, SS = 0, stepdist = 50, 
+  totaldist = 3000), method = "permute", collate.id = "multi")
+```
+
+`reval` adds identifiers automatically, which makes plotting easy.
+
+```{r plot-curves}
+require(ggplot2)
+ggplot(results, aes(x=x, y=y, color=factor(n))) + geom_line() + 
+  facet_wrap(~So)
+```
+
+Still confused? Check out the `eval_many` function documentation for more 
+examples.
