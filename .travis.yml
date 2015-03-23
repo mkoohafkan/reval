@@ -10,4 +10,5 @@ r_binary_packages:
  - dplyr
  - ggplot2
  - knitr
+r_packages:
  - rivr
