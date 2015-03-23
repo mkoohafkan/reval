@@ -51,24 +51,26 @@ Evaluate a function repeatedly across argument sets or permutations.
 }
 \examples{
 set.seed(1459)
-evalmany(rnorm, mean = c(5, 9), sd = c(2, 3), default.args = list(n = 5))
-evalmany(rnorm, mean = c(5, 9), sd = c(2, 3), default.args = list(n = 5),
-  reshape.fun = t, collate.id = "multi")
-evalmany(rnorm, mean=seq(20), sd = seq(1, 4, by = 0.1),
- default.args = list(n = 5), method = "permute", sample = 10,
-  reshape.fun = t)
+myfun = function(...){
+  x = rnorm(...)
+  data.frame(mean = mean(x), sd = sd(x))
+}
+evalmany(myfun, mean = c(5, 9), sd = c(2, 3), default.args = list(n = 1e6))
+evalmany(myfun, mean = c(5, 9), sd = c(2, 3), default.args = list(n = 1e6),
+  collate.id = "multi")
+evalmany(myfun, mean = seq(20), sd = seq(1, 4, by = 0.1),
+  default.args = list(n = 1e6), method = "permute", sample = 10)
 
 # vector recycling
-evalmany(rnorm, mean = c(0, 5, 3), sd = c(0, 1), method = "set",
-  default.args = list(n = 5), reshape.fun = t, collate.id = "multi")
+evalmany(myfun, mean = c(0, 3, 5), sd = c(1, 10),
+  default.args = list(n = 1e6), method = "set", collate.id = "multi")
+
+# Parallel processing
+evalmany(myfun, mean = seq(0, 50, by = 10), sd = seq(1, 10, by = 1.5),
+  default.args = list(n = 1e5), method = "permute", collate.id = "multi",
+  clusters = 2)
 
 \dontrun{
-# Parallel processing
-evalmany(rnorm, mean = seq(0, 50, by = 10), sd = seq(1, 10, by = 1.5),
-  default.args = list(n = 1e7), method = "permute", collate.id = "multi",
-  reshape.fun = function(x) data.frame(mean = mean(x), sd = sd(x)),
-  clusters = 4)
-
 # Complex objects and error handling
 formulas = list(y ~ 1, y ~ x, y ~ I(x^2), y ~ x + z)
 datasets = list(
@@ -82,7 +84,8 @@ evalmany(lm, formula = formulas, data = datasets, method = "set",
 # data extraction
 evalmany(lm, formula = formulas, data = datasets, method = "permute",
   collate.id = "multi", reshape.fun = function(x)
-    data.frame(param = names(x$coefficients), value = x$coefficients))
+    data.frame(param = names(x$coefficients), value = x$coefficients,
+    row.names=NULL))
 }
 }
 
