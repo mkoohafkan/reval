@@ -1,0 +1,13 @@
+language: r
+
+# Be strict when checking our package
+warnings_are_errors: true
+
+# System dependencies for HTTP calling
+r_binary_packages:
+ - doParallel
+ - foreach
+ - dplyr
+ - ggplot2
+ - knitr
+ - rivr
