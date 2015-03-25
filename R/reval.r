@@ -57,7 +57,7 @@ eval_set = function(fun, pargs, default.args){
 
 eval_permute = function(fun, pargs, default.args, size){
   arg.grid = expand.grid(pargs)
-  if(is.na(size))
+  if(size < 1)
     size = nrow(arg.grid)  
   permargs = as.list(arg.grid[sample(seq(nrow(arg.grid)), size = size),])
   attributes(permargs) = NULL 
@@ -76,12 +76,12 @@ eval_ofat = function(fun, pargs, default.args){
   return(ret)
 }
 
-collate_set = function(l, reshape.fun, collate.id){
-  id.name = "set"
+collate_set = function(l, collate.fun, collate.id){
+  id.name = "reval.set"
   res = NULL
   for(n in names(l))
     if(!is.null(l[[n]])){
-      nres = as.data.frame(reshape.fun(l[[n]]))
+      nres = as.data.frame(collate.fun(l[[n]]))
       nres[id.name] = n
       res = rbind(res, nres)
     }
@@ -115,27 +115,29 @@ parse_set = function(df, n){
 #'
 #' @param fun The function to be evaluated.
 #' @param ... Arguments to be varied when evaluating \code{fun}, where each 
-#'   argument in \code{...} is a (named) vector or list of values. Lists of
+#'   argument in '\code{...}' is a (named) vector or list of values. Lists of
 #'   multi-value objects (e.g. data.frames) should be named explicitly and may 
 #'   otherwise produce unexpected or incorrect names.
 #' @param method The sensitivity analysis method to be used. Can be either 
 #'   one-factor-at-a-time ("ofat") evaluation, evaluation of parameter sets
 #'   ("set"), or (sampled) permutations of parameter sets ("permute"). When
-#'   \code{method = "ofat"}, the first element of each argument in \code{...}
+#'   \code{method = "ofat"}, the first element of each argument in '\code{...}'
 #'   is assumed to be the "default" value of that argument.
 #' @param sample If \code{method = "permute"}, the number of parameter 
-#'   permutations to evaluate (sampling without replacement). If NA (the  
-#'   default) then all possible permutations are evaluated.
-#' @param default.args the default values of arguments passed to \code{fun}.
+#'   permutations to evaluate (sampling without replacement). 
+#'   If \code{sample < 1} (the default) then all possible permutations are 
+#'   evaluated.
+#' @param default.args The default values of arguments passed to \code{fun}.
 #' @param collate Whether to collate the results or not. If TRUE, output 
 #'   elements will be coerced into data.frames using \code{as.data.frame}.
-#' @param reshape.fun A function for reshaping the output of each evaluation
-#'   prior to coercing and collating the outputs. 
-#' @param collate.id Only used when \code{collate = TRUE}. The method used to 
-#'   store the evaluation identifiers. If \code{collate.id = "single"}, a single 
-#'   column is used. If \code{collate.id = "multi"}, one column is created 
-#'   for each argument in \code{...}. \code{collate.id = "multi"} can at times 
-#'   simplify data exploration and visualization.
+#'   Otherwise, the raw outputs will be returned as a named list.
+#' @param collate.id If \code{collate = TRUE}, the method used to 
+#'   store the evaluation identifiers. If \code{collate.id = "single"}, a 
+#'   single column is used. If \code{collate.id = "multi"}, one column is 
+#'   created for each argument in '\code{...}'. 
+#' @param collate.fun If \code{collate = TRUE}, an optional function 
+#'   for reshaping the output of each evaluation prior to coercing and 
+#'   collating the outputs. 
 #' @param clusters Number of clusters to use for parallel processing. Default
 #'   is 1 (serial computation).
 #'
@@ -166,25 +168,27 @@ parse_set = function(df, n){
 #' # Complex objects and error handling
 #' formulas = list(y ~ 1, y ~ x, y ~ I(x^2), y ~ x + z)   
 #' datasets = list(
-#'   A = data.frame(x = seq(0, 100) y = seq(0, 100) + rnorm(101)),
-#'   B = data.frame(x = seq(0, 100) y = seq(0, 100) + rnorm(101, mean = 5))
-#'   C = data.frame(x = seq(0, 100) y = seq(0, 100) + rlnorm(101, meanlog = 1))
+#'   A = data.frame(x = seq(0, 99), y = seq(0, 99) + rnorm(100)),
+#'   B = data.frame(x = seq(0, 99), y = seq(0, 99) + rnorm(100, mean = 5)),
+#'   C = data.frame(x = seq(0, 99), y = seq(0, 99) + rlnorm(100, meanlog = 1))
 #' )
 #' # raw output
 #' evalmany(lm, formula = formulas, data = datasets, method = "set", 
 #'   collate = FALSE)
 #' # data extraction
 #' evalmany(lm, formula = formulas, data = datasets, method = "permute",
-#'   collate.id = "multi", reshape.fun = function(x) 
+#'   collate.id = "multi", collate.fun = function(x) 
 #'     data.frame(param = names(x$coefficients), value = x$coefficients, 
 #'     row.names=NULL))
 #' }
 #'
 #' @export
 evalmany = function(fun, ..., method = c("ofat", "permute", "set"), 
-  sample = NA, default.args = list(), collate = TRUE, 
-  reshape.fun = identity, collate.id = c("single", "multi"), 
-  clusters = 1L){
+ sample = 0L, default.args = list(), collate = TRUE, 
+ collate.id = c("single", "multi"), collate.fun = identity, 
+ clusters = 1L){
+  if(any(names(list(...)) == ""))
+    stop("All arguments to 'fun' must be named")
   method = match.arg(method, c("ofat", "permute", "set"))
   collate.id = match.arg(collate.id, c("single", "multi"))
   pargs = list(...)
@@ -202,12 +206,12 @@ evalmany = function(fun, ..., method = c("ofat", "permute", "set"),
   else if(method == "set")
     res = eval_set(fun, pargs, default.args)
   else
-    res = eval_permute(fun, pargs, default.args, size = sample)
+    res = eval_permute(fun, pargs, default.args, size = as.integer(sample))
   # cleanup
   stopCluster(cl)
   # format outputs
   if(collate == FALSE)
     res
   else
-    collate_set(res, reshape.fun, collate.id)
+    collate_set(res, collate.fun, collate.id)
 }

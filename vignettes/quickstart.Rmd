@@ -4,6 +4,8 @@
 ```{r include=FALSE}
 require(knitr)
 require(reval)
+require(ggplot2)
+require(dplyr)
 opts_chunk$set(tidy=TRUE, message=FALSE)
 ```
 
@@ -12,9 +14,8 @@ Quickstart for reval
 
 Introduction
 ------------
-This vignette will get you stated using `reval` by showing a moderately-complex 
-example. Additional examples are available in the function documentation for
-`evalmany`.
+This vignette will get you stated using `reval`. Additional examples are 
+available in the `evalmany` function documentation.
 
 Example: Channel design sensitivity analysis
 --------------------------------------------
@@ -30,80 +31,92 @@ roughness values in order to establish confidence limits for planning and
 management purposes.
 
 The `rivr` package provides the function `compute_profile` for modelling 
-the backwater curve in a channel with unchanging geometry, given a known water 
-depth at a specified location. Computing a single profile would look something 
-like this: 
+backwater curves in prismatic channels given a known water depth at a specified 
+location. Computing a single profile would look something like this: 
 
-```{r single, results="hide"}
+```{r single}
 # install.packages("rivr")
 require(rivr)
-compute_profile(So = 0.001, n = 0.045, Q = 250, y0 = 2.7, Cm = 1.486, g = 32.2, 
-  B = 100, SS = 0, stepdist = 50, totaldist = 3000)
+myprofile = compute_profile(So = 0.001, n = 0.045, Q = 250, y0 = 2.5, 
+  Cm = 1.486, g = 32.2, B = 100, SS = 0, stepdist = 50, totaldist = 3000)
+head(myprofile)
 ```
 
 In order to perform a sensitivity analysis on the effect of the roughness 
-parameter on the backwater curve, we would need to loop through a series 
-of roughness values (the argument `n`) and compile the results for comparison.
-This could be accomplished with a simple for loop: 
+parameter on the backwater curve, we need to loop through a series of roughness 
+values (the argument "n") and compile the results for comparison. This could be 
+accomplished with a simple for loop: 
 
 ```{r loop}
+# loop through values of n
 ns = seq(0.03, 0.06, by = 0.005)
 results = vector("list", length=length(ns))
 for(i in 1:length(ns)){
-  results[[i]] = compute_profile(So = 0.001, n = ns[i], Q = 250, y0 = 2.7, 
+  results[[i]] = compute_profile(So = 0.001, n = ns[i], Q = 250, y0 = 2.5, 
     Cm = 1.486, g = 32.2, B = 100, SS = 0, stepdist = 50, totaldist = 3000)
   # add an identifier to the result
   results[[i]]["n"] = ns[i]
 }
+# combine outputs
 combined = do.call(rbind.data.frame, results)
 ```
  
-That wasn't too bad, but it's even easier with `reval`; we can replace that
+That wasn't too bad, but it's even easier with `reval`. We can replace that
 entire chunk of code with a single call to `evalmany`:
 
 ```{r reval-single}
 results = evalmany(compute_profile, n = seq(0.03, 0.06, by = 0.005),
-  default.args = list(So = 0.001, Q = 250, y0 = 2.7, 
-  Cm = 1.486, g = 32.2, B = 100, SS = 0, stepdist = 50, totaldist = 3000))
+  default.args = list(So = 0.001, Q = 250, y0 = 2.5, Cm = 1.486, g = 32.2, 
+  B = 100, SS = 0, stepdist = 50, totaldist = 3000))
+```
+```{r plot-single, echo=FALSE, fig.width=10, fig.height=5, dpi=200}
+ggplot(results, aes(x = x, y = y, color = reval.set)) + geom_line()
 ```
 
-What if we needed to investigate other parameters as well as the roughness 
-coefficient? If we wanted to stick to using loops, we would need an additional 
-loop for every variable, impacting readability and making code maintenance a 
-hassle. But extending the analysis to multiple variables is trivial with 
-`reval`:
+Other factors can also influence the water surface profile, such as the channel
+slope and the angle of the channel walls. If we wanted to perform a sensitivity
+analysis based on these parameters as well, we would need to use a set 
+of nested loops or add code to organize the sequence of parameter sets to 
+evaluate. This would impact readability and make code maintenance a hassle. 
+In contrast, performing a multi-parameter sensitivity analysis with `reval` is 
+trivial. Here we use `evalmany` to evaluate all possible permutations of the 
+three parameters. When performing more intensive computations, parallel 
+processing capabilities from the `doParallel` package can be leveraged using 
+the argument `clusters`.
 
 ```{r reval-multi}
-results = evalmany(compute_profile, n = seq(0.02, 0.08, by = 0.005),
+results = evalmany(compute_profile, n = seq(0.03, 0.06, by = 0.005),
   So = seq(0.001, 0.0015, by = 0.00025), SS = seq(0, 6, by = 2),
   default.args = list(Q = 250, y0 = 2.5, Cm = 1.486, g = 32.2, B = 100, 
-  stepdist = 50, totaldist = 3000), method = "permute", collate.id = "multi")
+  stepdist = 50, totaldist = 3000), method = "permute", collate.id = "multi",
+  clusters = 2)
 ```
 
-`reval` can also add identifiers automatically, which makes plotting easy.
+The `collate.id` argument is particularly useful for plotting with `ggplot2`
+and for subsetting data with `dplyr`.
 
 ```{r plot-curves, fig.width=10, dpi=200}
 require(ggplot2)
 ggplot(results, aes(x = x, y = y, color = factor(n))) + geom_line() + 
-  facet_grid(SS ~ So)
+  facet_grid(SS ~ So)  
+```
+```{r filter-data, results="hide"}  
+require(dplyr)
+filter(results, n == 0.045, So == 0.0015, SS == 2)
+```
+```{r first-five, echo=FALSE}
+kable(head(filter(results, n == 0.045, So == 0.0015, SS == 2)))
 ```
 
-The identifiers can also be used for data subsetting and extraction, e.g. using 
-`dplyr`.
-
-```{r reval-extract, results="hide"}
-require(dplyr)
-filter(results, n == 0.045, So == 0.0015)
-``` 
-
-Alternatively, the raw results can be output as a named list using the argument
-`collate = FALSE`. For more intensive computations, parallel processing 
-capabilities via the `doParallel` package can accessed using the argument 
-`clusters`. 
+In this case `compute_profile` outputs a dataframe and collating works as 
+expected. When the input function does not produce a dataframe, `evalmany` will
+attempt to coerce the output using `as.data.frame`. An optional function to 
+further manipulate the raw output prior to coercion to a data frame can be 
+passed via the argument `collate.fun`. Alternatively, the raw results can be 
+output as a named list with `collate = FALSE`. 
 
 
 Still confused? 
 ---------------
 
-Check out the `evalmany` function documentation for more 
-examples.
+Check out the `evalmany` function documentation for more examples.

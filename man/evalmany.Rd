@@ -4,41 +4,43 @@
 \alias{evalmany}
 \title{Repeated evaluations}
 \usage{
-evalmany(fun, ..., method = c("ofat", "permute", "set"), sample = NA,
-  default.args = list(), collate = TRUE, reshape.fun = identity,
-  collate.id = c("single", "multi"), clusters = 1L)
+evalmany(fun, ..., method = c("ofat", "permute", "set"), sample = 0L,
+  default.args = list(), collate = TRUE, collate.id = c("single",
+  "multi"), collate.fun = identity, clusters = 1L)
 }
 \arguments{
 \item{fun}{The function to be evaluated.}
 
 \item{...}{Arguments to be varied when evaluating \code{fun}, where each
-argument in \code{...} is a (named) vector or list of values. Lists of
+argument in '\code{...}' is a (named) vector or list of values. Lists of
 multi-value objects (e.g. data.frames) should be named explicitly and may
 otherwise produce unexpected or incorrect names.}
 
 \item{method}{The sensitivity analysis method to be used. Can be either
 one-factor-at-a-time ("ofat") evaluation, evaluation of parameter sets
 ("set"), or (sampled) permutations of parameter sets ("permute"). When
-\code{method = "ofat"}, the first element of each argument in \code{...}
+\code{method = "ofat"}, the first element of each argument in '\code{...}'
 is assumed to be the "default" value of that argument.}
 
 \item{sample}{If \code{method = "permute"}, the number of parameter
-permutations to evaluate (sampling without replacement). If NA (the
-default) then all possible permutations are evaluated.}
+permutations to evaluate (sampling without replacement).
+If \code{sample < 1} (the default) then all possible permutations are
+evaluated.}
 
-\item{default.args}{the default values of arguments passed to \code{fun}.}
+\item{default.args}{The default values of arguments passed to \code{fun}.}
 
 \item{collate}{Whether to collate the results or not. If TRUE, output
-elements will be coerced into data.frames using \code{as.data.frame}.}
+elements will be coerced into data.frames using \code{as.data.frame}.
+Otherwise, the raw outputs will be returned as a named list.}
 
-\item{reshape.fun}{A function for reshaping the output of each evaluation
-prior to coercing and collating the outputs.}
+\item{collate.id}{If \code{collate = TRUE}, the method used to
+store the evaluation identifiers. If \code{collate.id = "single"}, a
+single column is used. If \code{collate.id = "multi"}, one column is
+created for each argument in '\code{...}'.}
 
-\item{collate.id}{Only used when \code{collate = TRUE}. The method used to
-store the evaluation identifiers. If \code{collate.id = "single"}, a single
-column is used. If \code{collate.id = "multi"}, one column is created
-for each argument in \code{...}. \code{collate.id = "multi"} can at times
-simplify data exploration and visualization.}
+\item{collate.fun}{If \code{collate = TRUE}, an optional function
+for reshaping the output of each evaluation prior to coercing and
+collating the outputs.}
 
 \item{clusters}{Number of clusters to use for parallel processing. Default
   is 1 (serial computation).}
@@ -74,16 +76,16 @@ evalmany(myfun, mean = seq(0, 50, by = 10), sd = seq(1, 10, by = 1.5),
 # Complex objects and error handling
 formulas = list(y ~ 1, y ~ x, y ~ I(x^2), y ~ x + z)
 datasets = list(
-  A = data.frame(x = seq(0, 100) y = seq(0, 100) + rnorm(101)),
-  B = data.frame(x = seq(0, 100) y = seq(0, 100) + rnorm(101, mean = 5))
-  C = data.frame(x = seq(0, 100) y = seq(0, 100) + rlnorm(101, meanlog = 1))
+  A = data.frame(x = seq(0, 99), y = seq(0, 99) + rnorm(100)),
+  B = data.frame(x = seq(0, 99), y = seq(0, 99) + rnorm(100, mean = 5)),
+  C = data.frame(x = seq(0, 99), y = seq(0, 99) + rlnorm(100, meanlog = 1))
 )
 # raw output
 evalmany(lm, formula = formulas, data = datasets, method = "set",
   collate = FALSE)
 # data extraction
 evalmany(lm, formula = formulas, data = datasets, method = "permute",
-  collate.id = "multi", reshape.fun = function(x)
+  collate.id = "multi", collate.fun = function(x)
     data.frame(param = names(x$coefficients), value = x$coefficients,
     row.names=NULL))
 }

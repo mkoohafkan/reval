@@ -1,7 +1,7 @@
 Package: reval
 Title: Repeated Function Evaluation for Sensitivity Analysis in R
 Version: 1.0
-Date: 2015-03-23
+Date: 2015-03-25
 Author: Michael C Koohafkan [aut, cre]
 Maintainer: Michael C Koohafkan <michael.koohafkan@gmail.com>
 Description: Simplified scenario testing and sensitivity analysis with R via a 
