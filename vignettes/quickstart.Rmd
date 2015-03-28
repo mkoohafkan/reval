@@ -70,7 +70,7 @@ results = evalmany(compute_profile, n = seq(0.03, 0.06, by = 0.005),
   B = 100, SS = 0, stepdist = 50, totaldist = 3000))
 ```
 ```{r plot-single, echo=FALSE, fig.width=10, fig.height=5, dpi=200}
-ggplot(results, aes(x = x, y = y, color = reval.set)) + geom_line()
+ggplot(results, aes(x = x, y = y, color = eval.id)) + geom_line()
 ```
 
 Other factors can also influence the water surface profile, such as the channel
@@ -89,7 +89,7 @@ results = evalmany(compute_profile, n = seq(0.03, 0.06, by = 0.005),
   So = seq(0.001, 0.0015, by = 0.00025), SS = seq(0, 6, by = 2),
   default.args = list(Q = 250, y0 = 2.5, Cm = 1.486, g = 32.2, B = 100, 
   stepdist = 50, totaldist = 3000), method = "permute", collate.id = "multi",
-  clusters = 2)
+  clusters = 2, packages = "rivr")
 ```
 
 The `collate.id` argument is particularly useful for plotting with `ggplot2`
@@ -97,15 +97,15 @@ and for subsetting data with `dplyr`.
 
 ```{r plot-curves, fig.width=10, dpi=200}
 require(ggplot2)
-ggplot(results, aes(x = x, y = y, color = factor(n))) + geom_line() + 
-  facet_grid(SS ~ So)  
+ggplot(results, aes(x = x, y = y, color = factor(eval.n))) + geom_line() + 
+  facet_grid(eval.SS ~ eval.So)  
 ```
 ```{r filter-data, results="hide"}  
 require(dplyr)
-filter(results, n == 0.045, So == 0.0015, SS == 2)
+filter(results, eval.n == 0.045, eval.So == 0.0015, eval.SS == 2)
 ```
 ```{r first-five, echo=FALSE}
-kable(head(filter(results, n == 0.045, So == 0.0015, SS == 2)))
+kable(head(filter(results, eval.n==0.045, eval.So==0.0015, eval.SS==2)))
 ```
 
 In this case `compute_profile` outputs a dataframe and collating works as 

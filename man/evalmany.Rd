@@ -6,7 +6,7 @@
 \usage{
 evalmany(fun, ..., method = c("ofat", "permute", "set"), sample = 0L,
   default.args = list(), collate = TRUE, collate.id = c("single",
-  "multi"), collate.fun = identity, clusters = 1L)
+  "multi"), collate.fun = identity, clusters = 1L, packages = NULL)
 }
 \arguments{
 \item{fun}{The function to be evaluated.}
@@ -35,15 +35,19 @@ Otherwise, the raw outputs will be returned as a named list.}
 
 \item{collate.id}{If \code{collate = TRUE}, the method used to
 store the evaluation identifiers. If \code{collate.id = "single"}, a
-single column is used. If \code{collate.id = "multi"}, one column is
-created for each argument in '\code{...}'.}
+single column named 'eval.id' is used. If \code{collate.id = "multi"},
+one column is created for each argument in '\code{...}', e.g.
+'eval.arg1', 'eval.arg2', etc.}
 
 \item{collate.fun}{If \code{collate = TRUE}, an optional function
 for reshaping the output of each evaluation prior to coercing and
 collating the outputs.}
 
 \item{clusters}{Number of clusters to use for parallel processing. Default
-  is 1 (serial computation).}
+is 1 (serial computation).}
+
+\item{packages}{For parallel processing. Character vector of packages that
+  'fun' depends on.}
 }
 \value{
 If \code{collate = TRUE}, a data.frame. Otherwise, a named list.
@@ -52,16 +56,14 @@ If \code{collate = TRUE}, a data.frame. Otherwise, a named list.
 Evaluate a function repeatedly across argument sets or permutations.
 }
 \examples{
-set.seed(1459)
-myfun = function(...){
-  x = rnorm(...)
+myfun = function(n, mean=0, sd = 1){
+  x = rnorm(n, mean, sd)
   data.frame(mean = mean(x), sd = sd(x))
 }
 evalmany(myfun, mean = c(5, 9), sd = c(2, 3), default.args = list(n = 1e6))
-evalmany(myfun, mean = c(5, 9), sd = c(2, 3), default.args = list(n = 1e6),
-  collate.id = "multi")
 evalmany(myfun, mean = seq(20), sd = seq(1, 4, by = 0.1),
-  default.args = list(n = 1e6), method = "permute", sample = 10)
+  default.args = list(n = 1e6), method = "permute", sample = 10,
+  collate.id = "multi")
 
 # vector recycling
 evalmany(myfun, mean = c(0, 3, 5), sd = c(1, 10),
@@ -73,17 +75,18 @@ evalmany(myfun, mean = seq(0, 50, by = 10), sd = seq(1, 10, by = 1.5),
   clusters = 2)
 
 \dontrun{
-# Complex objects and error handling
-formulas = list(y ~ 1, y ~ x, y ~ I(x^2), y ~ x + z)
+# Complex objects
+formulas = list(y ~ 1, y ~ x, y ~ x + z)
 datasets = list(
   A = data.frame(x = seq(0, 99), y = seq(0, 99) + rnorm(100)),
   B = data.frame(x = seq(0, 99), y = seq(0, 99) + rnorm(100, mean = 5)),
-  C = data.frame(x = seq(0, 99), y = seq(0, 99) + rlnorm(100, meanlog = 1))
+  C = data.frame(x = seq(0, 99), y = seq(0, 99) + rlnorm(100, meanlog = 1),
+    z = seq(0, 99) - rlnorm(100, meanlog = -1))
 )
 # raw output
 evalmany(lm, formula = formulas, data = datasets, method = "set",
   collate = FALSE)
-# data extraction
+# data extraction and error handling
 evalmany(lm, formula = formulas, data = datasets, method = "permute",
   collate.id = "multi", collate.fun = function(x)
     data.frame(param = names(x$coefficients), value = x$coefficients,

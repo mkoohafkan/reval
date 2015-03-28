@@ -1,12 +1,12 @@
 Package: reval
-Title: Repeated Function Evaluation for Sensitivity Analysis in R
-Version: 1.0
+Title: Repeated Function Evaluation for Sensitivity Analysis
+Version: 1.0.1
 Date: 2015-03-25
 Author: Michael C Koohafkan [aut, cre]
 Maintainer: Michael C Koohafkan <michael.koohafkan@gmail.com>
-Description: Simplified scenario testing and sensitivity analysis with R via a 
-    generalized function for one-factor-at-a-time (OFAT) sensitivity analysis, 
-    evaluation of parameter sets and (sampled) parameter permutations. Options 
+Description: Simplified scenario testing and sensitivity analysis with R via a
+    generalized function for one-factor-at-a-time (OFAT) sensitivity analysis,
+    evaluation of parameter sets and (sampled) parameter permutations. Options
     for formatting output and parallel processing are also provided.
 URL: https://github.com/mkoohafkan/reval 
 BugReports: https://github.com/mkoohafkan/reval/issues 
