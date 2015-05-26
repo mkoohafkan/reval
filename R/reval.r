@@ -139,9 +139,14 @@ parse_set = function(df, n, prepend){
 #'   Otherwise, the raw outputs will be returned as a named list.
 #' @param collate.id If \code{collate = TRUE}, the method used to 
 #'   store the evaluation identifiers. If \code{collate.id = "single"}, a 
-#'   single column named 'eval.id' is used. If \code{collate.id = "multi"}, 
+#'   single column named 'id' is used. If \code{collate.id = "multi"}, 
 #'   one column is created for each argument in '\code{...}', e.g. 
-#'   'eval.arg1', 'eval.arg2', etc. 
+#'   'arg1', 'arg2', etc. 
+#' @param collate.prepend A character string prepended to the identifier 
+#'   column. If \code{collate.id = "single"}, the identifier column will be
+#'   named \code{<collate.prepend>id}. If \code{collate.id = "multi"}, 
+#'   identifier columns will be named as \code{<collate.prepend><arg>} where
+#'   \code{arg} is an element of \code{...}.
 #' @param collate.fun If \code{collate = TRUE}, an optional function 
 #'   for reshaping the output of each evaluation prior to coercing and 
 #'   collating the outputs. 
@@ -160,7 +165,7 @@ parse_set = function(df, n, prepend){
 #' evalmany(myfun, mean = c(5, 9), sd = c(2, 3), default.args = list(n = 1e6))
 #' evalmany(myfun, mean = seq(20), sd = seq(1, 4, by = 0.1), 
 #'   default.args = list(n = 1e6), method = "permute", sample = 10,
-#'   collate.id = "multi")
+#'   collate.id = "multi", collate.prepend = "arg.")
 #'
 #' # vector recycling
 #' evalmany(myfun, mean = c(0, 3, 5), sd = c(1, 10), 
