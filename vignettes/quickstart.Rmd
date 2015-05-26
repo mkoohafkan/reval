@@ -70,7 +70,7 @@ results = evalmany(compute_profile, n = seq(0.03, 0.06, by = 0.005),
   B = 100, SS = 0, stepdist = 50, totaldist = 3000))
 ```
 ```{r plot-single, echo=FALSE, fig.width=10, fig.height=5, dpi=200}
-ggplot(results, aes(x = x, y = y, color = eval.id)) + geom_line()
+ggplot(results, aes(x = x, y = y, color = id)) + geom_line()
 ```
 
 Other factors can also influence the water surface profile, such as the channel
@@ -97,15 +97,15 @@ and for subsetting data with `dplyr`.
 
 ```{r plot-curves, fig.width=10, dpi=200}
 require(ggplot2)
-ggplot(results, aes(x = x, y = y, color = factor(eval.n))) + geom_line() + 
-  facet_grid(eval.SS ~ eval.So)  
+ggplot(results, aes(x = x, y = y, color = factor(n))) + geom_line() + 
+  facet_grid(SS ~ So)  
 ```
 ```{r filter-data, results="hide"}  
 require(dplyr)
-filter(results, eval.n == 0.045, eval.So == 0.0015, eval.SS == 2)
+filter(results, n == 0.045, So == 0.0015, SS == 2)
 ```
 ```{r first-five, echo=FALSE}
-kable(head(filter(results, eval.n==0.045, eval.So==0.0015, eval.SS==2)))
+kable(head(filter(results, n == 0.045, So == 0.0015, SS == 2)))
 ```
 
 In this case `compute_profile` outputs a dataframe and collating works as 
