@@ -84,8 +84,8 @@ eval_ofat = function(fun, pargs, default.args, pkg){
   return(ret)
 }
 
-collate_set = function(l, collate.fun, collate.id){
-  id.name = "eval.id"
+collate_set = function(l, collate.fun, collate.id, prepend){
+  id.name = paste0(prepend, "id")
   res = NULL
   for(n in names(l))
     if(!is.null(l[[n]])){
@@ -96,17 +96,17 @@ collate_set = function(l, collate.fun, collate.id){
   if(collate.id == "single")
     res
   else
-    parse_set(res, id.name)
+    parse_set(res, id.name, prepend)
 }
 
-parse_set = function(df, n){
+parse_set = function(df, n, prepend){
   x = df[[n]]
   l = NULL
   variables = strsplit(x, " ; ") 
   for(i in seq(length(variables))){
     value = strsplit(variables[[i]], " = ")
     v = sapply(value, function(x) x[2])
-    names(v) = paste0("eval.", sapply(value, function(x) x[1]))
+    names(v) = paste0(prepend, sapply(value, function(x) x[1]))
     l = rbind(l, v)
   }
   rownames(l) = NULL
@@ -155,7 +155,7 @@ parse_set = function(df, n){
 #' @examples
 #' myfun = function(n, mean=0, sd = 1){ 
 #'   x = rnorm(n, mean, sd) 
-#'   data.frame(mean = mean(x), sd = sd(x))
+#'   data.frame(sample.mean = mean(x), sample.sd = sd(x))
 #' }
 #' evalmany(myfun, mean = c(5, 9), sd = c(2, 3), default.args = list(n = 1e6))
 #' evalmany(myfun, mean = seq(20), sd = seq(1, 4, by = 0.1), 
@@ -193,8 +193,8 @@ parse_set = function(df, n){
 #' @export
 evalmany = function(fun, ..., method = c("ofat", "permute", "set"), 
  sample = 0L, default.args = list(), collate = TRUE, 
- collate.id = c("single", "multi"), collate.fun = identity, 
- clusters = 1L, packages = NULL){
+ collate.id = c("single", "multi"), collate.prepend = "", 
+ collate.fun = identity, clusters = 1L, packages = NULL){
   # argument checks
   if(any(names(list(...)) == ""))
     stop("All arguments to 'fun' must be named")
@@ -224,5 +224,5 @@ evalmany = function(fun, ..., method = c("ofat", "permute", "set"),
   if(collate == FALSE)
     res
   else
-    collate_set(res, collate.fun, collate.id)
+    collate_set(res, collate.fun, collate.id, collate.prepend)
 }
