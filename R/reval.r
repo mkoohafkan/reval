@@ -1,3 +1,5 @@
+#' Repeated Function Evaluation For Sensitivity Analysis
+#'
 #' This package provides the function \code{evalmany} to simplify scenario 
 #' testing and sensitivity analysis with R.
 #'
@@ -133,8 +135,8 @@ parse_set = function(df, n, prepend){
 #'   permutations to evaluate (sampling without replacement). 
 #'   If \code{sample < 1} (the default) then all possible permutations are 
 #'   evaluated.
-#' @param default.args The default values of arguments passed to \code{fun}.
-#' @param collate Whether to collate the results or not. If TRUE, output 
+#' @param default.args Named list of additional arguments passed to \code{fun}.
+#' @param collate Whether to collate the results or not. If \code{TRUE}, output 
 #'   elements will be coerced into data.frames using \code{as.data.frame}.
 #'   Otherwise, the raw outputs will be returned as a named list.
 #' @param collate.id If \code{collate = TRUE}, the method used to 
@@ -146,7 +148,7 @@ parse_set = function(df, n, prepend){
 #'   column. If \code{collate.id = "single"}, the identifier column will be
 #'   named \code{<collate.prepend>id}. If \code{collate.id = "multi"}, 
 #'   identifier columns will be named as \code{<collate.prepend><arg>} where
-#'   \code{arg} is an element of \code{...}.
+#'   \code{arg} is an element of '\code{...}'.
 #' @param collate.fun If \code{collate = TRUE}, an optional function 
 #'   for reshaping the output of each evaluation prior to coercing and 
 #'   collating the outputs. 
@@ -158,14 +160,14 @@ parse_set = function(df, n, prepend){
 #' @return If \code{collate = TRUE}, a data.frame. Otherwise, a named list.
 #'
 #' @examples
-#' myfun = function(n, mean=0, sd = 1){ 
+#' myfun = function(n, mean = 0, sd = 1){ 
 #'   x = rnorm(n, mean, sd) 
 #'   data.frame(sample.mean = mean(x), sample.sd = sd(x))
 #' }
 #' evalmany(myfun, mean = c(5, 9), sd = c(2, 3), default.args = list(n = 1e6))
 #' evalmany(myfun, mean = seq(20), sd = seq(1, 4, by = 0.1), 
 #'   default.args = list(n = 1e6), method = "permute", sample = 10,
-#'   collate.id = "multi", collate.prepend = "arg.")
+#'   collate.id = "multi", collate.prepend = "population.")
 #'
 #' # vector recycling
 #' evalmany(myfun, mean = c(0, 3, 5), sd = c(1, 10), 

@@ -3,8 +3,7 @@
 \docType{package}
 \name{reval-package}
 \alias{reval-package}
-\title{This package provides the function \code{evalmany} to simplify scenario
-testing and sensitivity analysis with R.}
+\title{Repeated Function Evaluation For Sensitivity Analysis}
 \description{
 This package provides the function \code{evalmany} to simplify scenario
 testing and sensitivity analysis with R.
