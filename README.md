@@ -1,7 +1,8 @@
 reval: repeated function evaluation for sensitivity analysis
 ============================================================
-[![Build Status](https://travis-ci.org/mkoohafkan/reval.svg)](https://travis-ci.org/mkoohafkan/reval)
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/reval)](http://cran.r-project.org/package=reval)
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/mkoohafkan/reval/workflows/R-CMD-check/badge.svg)](https://github.com/mkoohafkan/reval/actions)
+<!-- badges: end -->
 
 `reval` is a small utility package for repeated function evaluations in R. It 
 is designed to simplify scenario testing and sensitivity analysis. 
