@@ -1,5 +1,5 @@
 #' Permutation Argument Set
-#' 
+#'
 #' Generate an argument table based on permutations.
 #'
 #' @param ... Named arguments to a function.
@@ -17,24 +17,24 @@
 #' @export
 args_permute = function(..., .n) {
   args = list(...)
-  arg.idx = map(args, seq_along)
-  idx.grid = expand.grid(arg.idx)
+  arg_idx = map(args, seq_along)
+  idx_grid = expand.grid(arg_idx)
   if (missing(.n)) {
-    idx.sample = seq(nrow(idx.grid))
+    idx_sample = seq(nrow(idx_grid))
   } else if (.n < 0 || is.na(.n) || length(.n) < 1) {
     stop("argument '.n' must non-negative integer")
-  } else if (.n > nrow(idx.grid)) {
+  } else if (.n > nrow(idx_grid)) {
     stop("cannot take a sample larger than the population")
   } else {
-    idx.sample = sample(seq(nrow(idx.grid)), size = .n)
+    idx_sample = sample(seq(nrow(idx_grid)), size = .n)
   }
-  permarg.idx = idx.grid[idx.sample,]
-  as_tibble(map2(args, permarg.idx, ~ .x[.y]))
+  permarg_idx = idx_grid[idx_sample, ]
+  as_tibble(map2(args, permarg_idx, ~ .x[.y]))
 }
 
 
 #' One Factor At a Time Argument Set
-#' 
+#'
 #' Generate an argument table based on OFAT.
 #'
 #' @inheritParams args_permute
@@ -50,17 +50,17 @@ args_permute = function(..., .n) {
 #' @export
 args_ofat = function(...) {
   args = list(...)
-  arg.idx = map(args, seq_along)
-  default.idx = map(arg.idx, ~ 1L)
-  ofat.idx = imap_dfr(arg.idx, 
-    ~ bind_cols(as_tibble(set_names(list(.x), .y)), 
-      select(as_tibble(default.idx), -.data[[.y]])))
-  ofat.idx = ofat.idx[names(args)]
-  distinct(as_tibble(map2(args, ofat.idx, ~ .x[.y])))
+  arg_idx = map(args, seq_along)
+  default_idx = map(arg_idx, ~ 1L)
+  ofat_idx = imap_dfr(arg_idx,
+    ~ bind_cols(as_tibble(set_names(list(.x), .y)),
+      select(as_tibble(default_idx), -.data[[.y]])))
+  ofat_idx = ofat_idx[names(args)]
+  distinct(as_tibble(map2(args, ofat_idx, ~ .x[.y])))
 }
 
 #' Argument Set
-#' 
+#'
 #' Generate an argument table from a set of arguments, following
 #' the standard rules for vector recycling in R.
 #'
@@ -73,20 +73,20 @@ args_ofat = function(...) {
 #' # mismatched argument lengths will generate a warning
 #' \dontrun{
 #' args_set(x = 1:10, y = 1:3)
-#' } 
+#' }
 #'
 #' @importFrom dplyr as_tibble
 #' @importFrom purrr map map_int map2
 #' @export
 args_set = function(...) {
   args = list(...)
-  arg.idx = map(args, seq_along)
-  arg.lengths = map_int(args, length)
-  max.length = max(arg.lengths)
-  if (any(max.length %% arg.lengths > 0L)) {
-    warning("longer object length is not a ", 
+  arg_idx = map(args, seq_along)
+  arg_lengths = map_int(args, length)
+  max_length = max(arg_lengths)
+  if (any(max_length %% arg_lengths > 0L)) {
+    warning("longer object length is not a ",
       "multiple of shorter object length")
   }
-  set.idx = map(arg.idx, rep, length.out = max.length)
-  as_tibble(map2(args, set.idx, ~ .x[.y])) 
+  set_idx = map(arg_idx, rep, length.out = max_length)
+  as_tibble(map2(args, set_idx, ~ .x[.y]))
 }

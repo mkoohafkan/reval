@@ -22,6 +22,6 @@ args_set(x = 1:10, y = 1:5, z = 1:2)
 # mismatched argument lengths will generate a warning
 \dontrun{
 args_set(x = 1:10, y = 1:3)
-} 
+}
 
 }

@@ -1,9 +1,8 @@
-Submission of reval 3.0-0. 
+Submission of reval 3.1-0. 
 
-Version 3.0 is a complete redesign that drops dependencies
-on packages `forEach` and `doParallel` in favor of `future`
-and `furrr`, and a new workflow that takes advantage of the
-`tidyverse` framework and `tibble` features.
+- Removed deprecated functions.
+- Removed re-exports. Vignette now recommends loading libraries or 
+  explicitly referencing functions with `::`.
 
 ## Test environments
 

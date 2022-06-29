@@ -7,5 +7,6 @@
 in R. It is designed to simplify scenario testing and sensitivity
 analysis. The package supports one-factor-at-a-time (OFAT) sensitivity
 analysis, evaluation of parameter sets and (sampled) parameter
-permutation. The actual evaluation is done using `furrr` to take
-advantage of parallel processing features.
+permutation. The actual evaluation is done using
+`furrr:::future_pmap()` to take advantage of parallel processing
+functionality as specified via `future::plan()`.
